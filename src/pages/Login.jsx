@@ -1,40 +1,78 @@
-import { useState } from 'react';
-import axios from '../api/axios';
+import React, { useState } from 'react';
+import axios from '../api/axios'; 
 import { useNavigate } from 'react-router-dom';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+
     try {
       const res = await axios.post('/auth/login', { email, password });
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('role', res.data.role);
-      
-      const user = res.data.user;
-      if (user.role === "admin") {
-        navigate("/admin-dashboard");
-      } else if (user.role === "user") {
-        navigate("/user-dashboard");
-      } else if (user.role === "vendor") {
-        navigate("/vendor-dashboard");
-      } else {
-        navigate("/");
+      const { user, token } = res.data;
+
+      if (!user || !token) {
+        throw new Error('Invalid response from server');
       }
+
+      // Save to localStorage
+      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('token', token);
+      localStorage.setItem('role', user.role);
+
+      // Redirect based on role
+      if (user.role === 'admin') {
+        navigate('/admin-dashboard');
+      } else if (user.role === 'vendor') {
+        navigate('/vendor-dashboard');
+      } else if (user.role === 'user') {
+        navigate('/user-dashboard');
+      } else {
+        navigate('/');
+      }
+
     } catch (err) {
-      alert('Login failed');
+      setError(err.response?.data?.message || 'Login failed. Please try again.');
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-md mx-auto p-6 mt-10 bg-white rounded-xl shadow">
-      <h2 className="text-2xl mb-4">Login</h2>
-      <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className="w-full p-2 border mb-3" />
-      <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" className="w-full p-2 border mb-3" />
-      <button className="bg-blue-600 text-white px-4 py-2 rounded">Login</button>
-    </form>
+    <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded shadow-md">
+      <h2 className="text-2xl font-bold mb-4 text-center">Login</h2>
+      {error && <p className="text-red-500 mb-4">{error}</p>}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block font-medium">Email</label>
+          <input
+            type="email"
+            className="w-full border p-2 rounded"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label className="block font-medium">Password</label>
+          <input
+            type="password"
+            className="w-full border p-2 rounded"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+        <button
+          type="submit"
+          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+        >
+          Login
+        </button>
+      </form>
+    </div>
   );
 }
