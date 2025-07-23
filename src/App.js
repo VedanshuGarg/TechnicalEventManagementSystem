@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
@@ -24,9 +24,10 @@ import GuestList from "./pages/user/GuestList";
 import OrderStatus from "./pages/user/OrderStatus";
 
 function App() {
-  // Get user from localStorage (assumes token contains role info)
   const user = JSON.parse(localStorage.getItem("user"));
-
+  const role = localStorage.getItem("role") || (user && user.role) || "";
+  console.log("User:", user);
+  console.log("User Role:", role);
   return (
     <BrowserRouter>
       <Navbar />
@@ -35,73 +36,14 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-
-          {/* Role-based routes */}
-          <Route
-            path="/maintenance"
-            element={
-              user?.role === "admin" ? (
-                <MaintenancePage />
-              ) : (
-                <Navigate to="/unauthorized" />
-              )
-            }
-          />
-          <Route
-            path="/admin-dashboard"
-            element={
-              user?.role === "admin" ? (
-                <AdminDashboard />
-              ) : (
-                <Navigate to="/unauthorized" />
-              )
-            }
-          />
-          <Route
-            path="/admin/memberships"
-            element={
-              user?.role === "admin" ? (
-                <AddOrUpdateMembership />
-              ) : (
-                <Navigate to="/unauthorized" />
-              )
-            }
-          />
-          <Route
-            path="/user-dashboard"
-            element={
-              user?.role === "user" ? (
-                <UserDashboard />
-              ) : (
-                <Navigate to="/unauthorized" />
-              )
-            }
-          />
-
+          <Route path="/maintenance" element={<MaintenancePage />} />
+          <Route path="/admin-dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/memberships" element={<AddOrUpdateMembership />} />
+          <Route path="/user-dashboard" element={<UserDashboard />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="/reports" element={<Reports />} />
-          <Route
-            path="/transactions"
-            element={
-              user?.role === "admin" ||
-              user?.role === "user" ||
-              user?.role === "vendor" ? (
-                <Transactions />
-              ) : (
-                <Navigate to="/unauthorized" />
-              )
-            }
-          />
-          <Route
-            path="/vendor-dashboard"
-            element={
-              user?.role === "vendor" ? (
-                <VendorDashboard />
-              ) : (
-                <Navigate to="/unauthorized" />
-              )
-            }
-          />
+          <Route path="/transactions" element={<Transactions />} />
+          <Route path="/vendor-dashboard" element={<VendorDashboard />} />
           <Route path="/vendor/items" element={<YourItems />} />
           <Route path="/vendor/add-item" element={<AddItem />} />
           <Route path="/vendor/transactions" element={<VendorTransactions />} />
